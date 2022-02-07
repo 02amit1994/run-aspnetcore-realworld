@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace AspnetRun.Infrastructure.Data
 {
-    public class AspnetRunContext : IdentityDbContext<IdentityUser>
+    public class AspnetRunContext : IdentityDbContext<ApplicationUser>
     {
         public AspnetRunContext(DbContextOptions options) : base(options)
         {
@@ -32,8 +32,7 @@ namespace AspnetRun.Infrastructure.Data
         public DbSet<ProductCompare> ProductCompares { get; set; }
         public DbSet<ProductList> ProductLists { get; set; }
         public DbSet<ProductRelatedProduct> ProductRelatedProducts { get; set; }
-
-
+       
         protected override void OnModelCreating(ModelBuilder builder)
         {
             SetTableNamesAsSingle(builder);

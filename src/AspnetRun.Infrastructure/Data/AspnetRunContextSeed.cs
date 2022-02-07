@@ -905,10 +905,9 @@ namespace AspnetRun.Infrastructure.Data
 
                 if (!aspnetRunContext.Roles.Any(r => r.Name == role))
                 {
-                    await roleStore.CreateAsync(new IdentityRole(role));
+                    await roleStore.CreateAsync(new IdentityRole { Name = role, NormalizedName = role });
                 }
             }
-
 
             var user = new ApplicationUser
             {
@@ -922,9 +921,7 @@ namespace AspnetRun.Infrastructure.Data
                 EmailConfirmed = true,
                 PhoneNumberConfirmed = true,
                 SecurityStamp = Guid.NewGuid().ToString("D"),
-
             };
-
 
             if (!aspnetRunContext.Users.Any(u => u.UserName == user.UserName))
             {
@@ -933,13 +930,15 @@ namespace AspnetRun.Infrastructure.Data
                 user.PasswordHash = hashed;
                 var userStore = new UserStore<ApplicationUser>(aspnetRunContext);
                 var result = userStore.CreateAsync(user);
+                await aspnetRunContext.SaveChangesAsync();
             }
+
 
             await AssignRoles(aspnetRunContext, user.Email, roles);
             await aspnetRunContext.SaveChangesAsync();
         }
 
-        public static async Task<IdentityResult> AssignRoles(AspnetRunContext aspnetRunContext, string email, string[] roles)
+        private static async Task<IdentityResult> AssignRoles(AspnetRunContext aspnetRunContext, string email, string[] roles)
         {
             var userStore = new UserStore<ApplicationUser>(aspnetRunContext);
             var _userManager = new UserManager<ApplicationUser>(userStore, null, new PasswordHasher<ApplicationUser>(), null, null, null, null, null, null);

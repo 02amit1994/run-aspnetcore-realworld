@@ -38,7 +38,7 @@ namespace AspnetRun.Web
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
-        {            
+        {
             // aspnetrun dependencies
             ConfigureAspnetRunServices(services);
 
@@ -76,7 +76,7 @@ namespace AspnetRun.Web
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
-            });            
+            });
         }
 
         private void ConfigureAspnetRunServices(IServiceCollection services)
@@ -96,7 +96,7 @@ namespace AspnetRun.Web
             services.AddScoped<IWishlistRepository, WishlistRepository>();
             services.AddScoped<ICompareRepository, CompareRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
-            
+
 
             // Add Application Layer
             services.AddScoped<IProductService, ProductService>();
@@ -135,9 +135,17 @@ namespace AspnetRun.Web
 
         public void ConfigureIdentity(IServiceCollection services)
         {
-            services.AddDefaultIdentity<IdentityUser>()
-                .AddDefaultUI()
-                .AddEntityFrameworkStores<AspnetRunContext>();
+            //services.AddDefaultIdentity<IdentityUser>()
+            //    .AddDefaultUI()
+            //    .AddEntityFrameworkStores<AspnetRunContext>();
+
+            services.AddIdentity<IdentityUser, IdentityRole>(config =>
+            {
+                config.Password.RequireNonAlphanumeric = false; //optional
+                config.SignIn.RequireConfirmedEmail = true; //optional
+            })
+            .AddEntityFrameworkStores<AspnetRunContext>()
+            .AddDefaultTokenProviders();
 
             services.Configure<IdentityOptions>(options =>
             {
