@@ -1,4 +1,6 @@
 ﻿using AspnetRun.Core.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -39,7 +41,10 @@ namespace AspnetRun.Infrastructure.Data
                 await SeedOrderAndItemsAsync(aspnetrunContext);
 
                 // blog
-                await SeedBlogsAsync(aspnetrunContext);                
+                await SeedBlogsAsync(aspnetrunContext);
+
+                // role
+                await SeedRolesAsync(aspnetrunContext);
             }
             catch (Exception exception)
             {
@@ -53,7 +58,7 @@ namespace AspnetRun.Infrastructure.Data
                 throw;
             }
         }
-                
+
         private static async Task SeedCategoriesAsync(AspnetRunContext aspnetrunContext)
         {
             if (aspnetrunContext.Categories.Any())
@@ -74,7 +79,7 @@ namespace AspnetRun.Infrastructure.Data
 
             aspnetrunContext.Categories.AddRange(categories);
             await aspnetrunContext.SaveChangesAsync();
-        }       
+        }
 
         private static async Task SeedSpecificationsAsync(AspnetRunContext aspnetrunContext)
         {
@@ -150,7 +155,7 @@ namespace AspnetRun.Infrastructure.Data
             };
 
             aspnetrunContext.Reviews.AddRange(reviews);
-            await aspnetrunContext.SaveChangesAsync();            
+            await aspnetrunContext.SaveChangesAsync();
         }
 
         private static async Task SeedTagsAsync(AspnetRunContext aspnetrunContext)
@@ -189,7 +194,7 @@ namespace AspnetRun.Infrastructure.Data
         private static async Task SeedProductsAsync(AspnetRunContext aspnetrunContext)
         {
             if (aspnetrunContext.Products.Any())
-                return;           
+                return;
 
             var products = new List<Product>
             {
@@ -682,7 +687,7 @@ namespace AspnetRun.Infrastructure.Data
             };
 
             var newProductWishlists = new List<ProductWishlist>()
-            {                
+            {
                 new ProductWishlist
                 {
                     Product = aspnetrunContext.Products.Where(x => x.Id % 2 == 1).FirstOrDefault(),
@@ -697,7 +702,7 @@ namespace AspnetRun.Infrastructure.Data
 
             aspnetrunContext.Wishlists.AddRange(wishlists);
             aspnetrunContext.ProductWishlists.AddRange(newProductWishlists);
-            
+
             await aspnetrunContext.SaveChangesAsync();
         }
 
@@ -888,6 +893,60 @@ namespace AspnetRun.Infrastructure.Data
 
             aspnetrunContext.Blogs.AddRange(blogs);
             await aspnetrunContext.SaveChangesAsync();
-        }        
+        }
+
+        private static async Task SeedRolesAsync(AspnetRunContext aspnetRunContext)
+        {
+            string[] roles = new string[] { "Owner", "Admin", "Manager", "Editor", "Buyer", "Business", "Seller", "Subscriber" };
+
+            foreach (string role in roles)
+            {
+                var roleStore = new RoleStore<IdentityRole>(aspnetRunContext);
+
+                if (!aspnetRunContext.Roles.Any(r => r.Name == role))
+                {
+                    await roleStore.CreateAsync(new IdentityRole(role));
+                }
+            }
+
+
+            var user = new ApplicationUser
+            {
+                FirstName = "Admin",
+                LastName = "XXXX",
+                Email = "admin@gmail.com",
+                NormalizedEmail = "ADMIN@GMAIL.COM",
+                UserName = "Owner",
+                NormalizedUserName = "OWNER",
+                PhoneNumber = "+111111111111",
+                EmailConfirmed = true,
+                PhoneNumberConfirmed = true,
+                SecurityStamp = Guid.NewGuid().ToString("D"),
+
+            };
+
+
+            if (!aspnetRunContext.Users.Any(u => u.UserName == user.UserName))
+            {
+                var password = new PasswordHasher<ApplicationUser>();
+                var hashed = password.HashPassword(user, "Admin@123");
+                user.PasswordHash = hashed;
+                var userStore = new UserStore<ApplicationUser>(aspnetRunContext);
+                var result = userStore.CreateAsync(user);
+            }
+
+            await AssignRoles(aspnetRunContext, user.Email, roles);
+            await aspnetRunContext.SaveChangesAsync();
+        }
+
+        public static async Task<IdentityResult> AssignRoles(AspnetRunContext aspnetRunContext, string email, string[] roles)
+        {
+            var userStore = new UserStore<ApplicationUser>(aspnetRunContext);
+            var _userManager = new UserManager<ApplicationUser>(userStore, null, new PasswordHasher<ApplicationUser>(), null, null, null, null, null, null);
+            ApplicationUser user = await _userManager.FindByEmailAsync(email);
+            var result = await _userManager.AddToRolesAsync(user, roles);
+            return result;
+        }
+
     }
 }
