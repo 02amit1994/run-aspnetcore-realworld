@@ -24,6 +24,7 @@ using AspnetRun.Application.Services;
 using AspnetRun.Web.HealthChecks;
 using AspnetRun.Web.Interfaces;
 using AspnetRun.Web.Services;
+using AspnetRun.Core.Entities;
 
 namespace AspnetRun.Web
 {
@@ -139,12 +140,13 @@ namespace AspnetRun.Web
             //    .AddDefaultUI()
             //    .AddEntityFrameworkStores<AspnetRunContext>();
 
-            services.AddIdentity<IdentityUser, IdentityRole>(config =>
+            services.AddIdentity<ApplicationUser, IdentityRole>(config =>
             {
                 config.Password.RequireNonAlphanumeric = false; //optional
                 config.SignIn.RequireConfirmedEmail = true; //optional
             })
             .AddEntityFrameworkStores<AspnetRunContext>()
+            .AddDefaultUI()
             .AddDefaultTokenProviders();
 
             services.Configure<IdentityOptions>(options =>
